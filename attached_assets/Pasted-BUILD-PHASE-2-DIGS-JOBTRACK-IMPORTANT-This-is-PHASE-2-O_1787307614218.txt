@@ -1,0 +1,1099 @@
+BUILD PHASE 2 — DIGS JOBTRACK
+================================
+
+IMPORTANT:
+This is PHASE 2 ONLY.
+
+Do NOT rebuild Phase 1.
+Do NOT remove, break, or redesign existing Phase 1 functionality.
+
+Phase 1 must remain fully functional:
+- Job management
+- CSV/XLSX import
+- WRKMAN text import
+- Customer records
+- Call/SMS/WhatsApp
+- Contact history
+- Statuses
+- Priority
+- Scheduling
+- Postponement
+- Expenses
+- Reports
+- Export
+
+Phase 2 adds LOCATION, GPS, DIRECTIONS, ROUTING and FIELD MOVEMENT.
+
+================================
+1. CURRENT LOCATION
+================================
+
+Add a reliable:
+
+📍 MY LOCATION
+
+feature.
+
+When the user opens JobTrack and grants permission, obtain the phone's current GPS location.
+
+Display:
+
+Current latitude
+Current longitude
+Accuracy
+Current approximate location/address when available
+
+Show a clear GPS permission state:
+
+LOCATION ENABLED
+LOCATION DISABLED
+LOCATION PERMISSION REQUIRED
+LOCATION UNAVAILABLE
+
+Do not pretend the location is accurate if GPS accuracy is poor.
+
+Provide:
+
+REFRESH LOCATION
+
+button.
+
+Use browser/device geolocation APIs in the web/PWA version.
+
+Keep the architecture ready for deeper native Android GPS integration when packaged as an APK.
+
+================================
+2. INDIVIDUAL JOB DIRECTIONS
+================================
+
+Every job must have:
+
+📍 DIRECTIONS
+
+When clicked:
+
+Origin:
+CURRENT LOCATION
+
+Destination:
+CUSTOMER ADDRESS
+
+The system should open the best available map/navigation service with the destination.
+
+Prefer Google Maps on Android when available.
+
+Do not force the user to copy and paste addresses.
+
+The customer address should be passed automatically.
+
+If GPS is unavailable, allow:
+
+USE MANUAL START LOCATION
+
+================================
+3. ROUTE TO JOB
+================================
+
+Create a dedicated:
+
+START ROUTE
+
+button.
+
+When pressed:
+
+1. Read current GPS location.
+2. Confirm destination.
+3. Display route information.
+4. Allow navigation to begin.
+5. Keep the JobTrack job visible while navigating.
+
+The user should be able to return to JobTrack without losing the active route.
+
+Show:
+
+START
+DESTINATION
+DISTANCE
+ESTIMATED TRAVEL TIME
+
+When supported by the mapping provider.
+
+================================
+4. COMPLETE JOB ROUTE
+================================
+
+Add:
+
+🗺️ COMPLETE JOB ROUTE
+
+This is different from individual directions.
+
+It should allow the user to select several jobs for the day.
+
+Example:
+
+START
+↓
+JOB 1
+↓
+JOB 2
+↓
+JOB 3
+↓
+JOB 4
+↓
+RETURN / FINAL DESTINATION
+
+The application should generate an ordered route.
+
+The route should be based on geographical position and not merely the order the jobs were entered.
+
+The user must be able to manually change the order.
+
+Show:
+
+STOP 1
+Customer
+Address
+Distance from previous stop
+Estimated travel time
+
+STOP 2
+Customer
+Address
+Distance from previous stop
+Estimated travel time
+
+etc.
+
+================================
+5. ROUTE ORDERING
+================================
+
+Implement route sequencing.
+
+Input:
+
+Current location
+Selected jobs
+Optional final destination
+
+Calculate a practical route order.
+
+The objective should be:
+
+Minimize unnecessary backtracking.
+
+However, do NOT blindly optimize only mathematical distance.
+
+Allow the user to manually reorder stops.
+
+Display:
+
+OPTIMIZED
+MANUAL
+
+route modes.
+
+================================
+6. ROUTE TABLE
+================================
+
+Create a mobile-friendly route table:
+
+STOP
+CUSTOMER
+LOCATION
+DISTANCE
+TIME
+STATUS
+ACTION
+
+Example:
+
+1
+Owoidoho Akpan
+Udo Ekpo
+—
+START
+
+2
+Mfonobong George
+Aka Nung Udoe
+2.4 km
+NAVIGATE
+
+3
+Kingsley Eduok
+Ikot Akpaden
+18 km
+NAVIGATE
+
+The table must remain readable on a phone.
+
+Allow horizontal movement inside the table if necessary.
+
+Do not make the whole application horizontally scroll.
+
+================================
+7. LANDMARKS
+================================
+
+Each job must have a:
+
+LANDMARKS
+
+section.
+
+Store:
+
+Primary Landmark
+Secondary Landmark
+Junction
+Road
+Nearest Major Road
+Local Area
+Additional Directions
+
+Example:
+
+Primary Landmark:
+Kilimanjaro
+
+Junction:
+Kilimanjaro Junction
+
+Major Road:
+Oron Road
+
+Additional Direction:
+Stop at Kilimanjaro Junction and take a shuttle/bike toward the customer's street.
+
+These fields must be editable.
+
+Do NOT invent landmarks.
+
+Allow the technician to add or edit landmarks after verifying them.
+
+================================
+8. CUSTOMER LOCATION DESCRIPTION
+================================
+
+Add:
+
+LOCATION NOTES
+
+Example:
+
+"After Gitar Flyover, opposite XYZ Filling Station, take the junction on the right."
+
+This must be separate from the official customer address.
+
+Reason:
+
+Customer addresses in Nigeria can be incomplete.
+
+The app must preserve both:
+
+OFFICIAL ADDRESS
+
+and
+
+FIELD NAVIGATION DESCRIPTION.
+
+================================
+9. MAP VIEW
+================================
+
+Add a map screen.
+
+Display:
+
+Current location
+Selected customer
+Route
+Stops
+
+Use a mapping provider that supports:
+
+Road maps
+Satellite imagery where available
+Markers
+Directions
+Zoom
+Current location
+
+The architecture should make the map provider configurable.
+
+Google Maps should be supported where technically and legally appropriate.
+
+Do not embed Google Maps using an unofficial method.
+
+Use official APIs/SDKs or supported navigation links.
+
+================================
+10. SATELLITE VIEW
+================================
+
+Provide:
+
+MAP
+SATELLITE
+
+toggle where the selected mapping provider supports it.
+
+Satellite view is primarily for visual confirmation of the surrounding environment.
+
+It should help identify:
+
+Buildings
+Roads
+Compounds
+Landmarks
+Large structures
+Junctions
+
+Do not claim that satellite imagery is live.
+
+Clearly understand that satellite imagery is normally historical imagery, not a live camera feed.
+
+================================
+11. LANDMARK VISUAL CONFIRMATION
+================================
+
+On the job location screen show:
+
+Customer destination
+Nearest landmark
+Map
+Satellite option
+
+If available through the selected map provider, allow the user to open the location in the external map application for richer imagery/street-level information.
+
+Do not fabricate photographs of landmarks.
+
+================================
+12. ARRIVAL DETECTION
+================================
+
+Add:
+
+ARRIVAL DETECTION
+
+When the user is navigating toward a job, monitor GPS location with permission.
+
+When the user enters a configurable radius around the customer's coordinates:
+
+show:
+
+📍 YOU HAVE ARRIVED
+
+Allow default radius:
+
+100 metres
+
+Allow settings:
+
+50m
+100m
+200m
+500m
+
+Do not automatically mark the job COMPLETED.
+
+Instead:
+
+ARRIVED
+
+must be recorded.
+
+The user can then manually press:
+
+START INSTALLATION
+
+and later:
+
+COMPLETE JOB.
+
+================================
+13. ARRIVED STATUS
+================================
+
+When arrival is detected:
+
+Job status changes:
+
+GOING
+↓
+ARRIVED
+
+Record:
+
+Arrival Date
+Arrival Time
+GPS coordinates
+GPS accuracy
+
+Display:
+
+ARRIVED AT CUSTOMER LOCATION
+
+The user can manually override the arrival state if GPS is inaccurate.
+
+================================
+14. START INSTALLATION
+================================
+
+Add:
+
+START INSTALLATION
+
+button.
+
+When pressed:
+
+Status:
+
+ARRIVED
+↓
+IN PROGRESS
+
+Record:
+
+Start time
+
+================================
+15. COMPLETE JOB
+================================
+
+The existing Phase 1 completion process remains.
+
+After installation:
+
+COMPLETE JOB
+
+Record:
+
+Completion date
+Completion time
+Installation notes
+Customer confirmation
+Expenses
+Optional photo/evidence
+
+GPS coordinates at completion may also be stored.
+
+================================
+16. ACTIVE FIELD MODE
+================================
+
+Create a:
+
+FIELD MODE
+
+screen.
+
+When activated, show only the information needed while travelling.
+
+Example:
+
+--------------------------------
+CURRENT JOB
+--------------------------------
+
+CUSTOMER:
+Kingsley Eduok
+
+DESTINATION:
+1 Williamson Street,
+Ikot Akpaden
+
+NEXT LANDMARK:
+[Landmark]
+
+DISTANCE:
+[distance]
+
+ETA:
+[time]
+
+STATUS:
+GOING
+
+[ OPEN DIRECTIONS ]
+
+[ CALL ]
+
+[ SMS ]
+
+[ WHATSAPP ]
+
+[ ARRIVED ]
+
+--------------------------------
+
+Keep the interface extremely simple.
+
+Large buttons.
+
+Minimal typing.
+
+================================
+17. ACTIVE ROUTE
+================================
+
+When a route is active:
+
+Display:
+
+Current Stop
+Next Stop
+Remaining Stops
+
+Example:
+
+CURRENT:
+Stop 2 — Mfonobong George
+
+NEXT:
+Stop 3 — Dr Ubong Uso
+
+REMAINING:
+3
+
+Allow:
+
+NEXT JOB
+PREVIOUS JOB
+OPEN MAP
+CALL CUSTOMER
+MARK ARRIVED
+
+================================
+18. SHARE LOCATION
+================================
+
+Add:
+
+📍 SHARE MY LOCATION
+
+The user should be able to share their current coordinates/location using the phone's native sharing mechanism.
+
+Preferred options:
+
+WhatsApp
+SMS
+Other installed sharing applications
+
+Generate a location link that can be opened in a compatible map service.
+
+Do not silently transmit location.
+
+The user must explicitly press SHARE.
+
+================================
+19. SHARE LOCATION WITH CUSTOMER
+================================
+
+Inside a job:
+
+SHARE MY LOCATION WITH CUSTOMER
+
+should prepare a message.
+
+Example:
+
+"Good day sir/ma. This is Israel from WRKMAN. I am currently on my way to your location. You can track my current location here: [LOCATION LINK]"
+
+Allow:
+
+WhatsApp
+SMS
+
+The user must review and send.
+
+================================
+20. ROUTE PROGRESS
+================================
+
+For a multi-stop route, display:
+
+ROUTE PROGRESS
+
+Example:
+
+✓ Stop 1 — Completed
+✓ Stop 2 — Completed
+● Stop 3 — Going
+○ Stop 4 — Pending
+○ Stop 5 — Pending
+
+Also show:
+
+Completed Stops
+Remaining Stops
+Distance travelled where available
+Current position
+Next destination
+
+================================
+21. ROUTE REORDERING
+================================
+
+The user must be able to manually reorder stops.
+
+Example:
+
+☰ Stop 1
+☰ Stop 2
+☰ Stop 3
+
+Allow drag-and-drop.
+
+After changing the order:
+
+RECALCULATE ROUTE
+
+The app must recalculate the route.
+
+================================
+22. ADD / REMOVE ROUTE STOP
+================================
+
+While planning a route:
+
+ADD JOB
+
+allows adding another job.
+
+REMOVE
+
+removes a job from the current route only.
+
+It must NOT delete the underlying job.
+
+================================
+23. FINAL DESTINATION
+================================
+
+Allow:
+
+START LOCATION
+FINAL DESTINATION
+
+The final destination can be:
+
+Current location
+Home
+Office
+Custom location
+
+Allow the user to save a default:
+
+HOME LOCATION
+
+in Settings.
+
+Example:
+
+Itak Junction
+
+The user can then create:
+
+Itak
+↓
+Job 1
+↓
+Job 2
+↓
+Job 3
+↓
+Itak
+
+================================
+24. ROUND TRIP
+================================
+
+Create:
+
+ROUND TRIP
+
+option.
+
+When enabled:
+
+Start:
+Current Location or saved Home
+
+Stops:
+Selected jobs
+
+End:
+Start Location or selected final destination
+
+The route should attempt to minimize unnecessary backtracking.
+
+================================
+25. TRANSPORT INFORMATION
+================================
+
+Keep Phase 1 expense tracking.
+
+Add route-level expenses:
+
+Total Transport Cost
+Estimated Transport Cost
+Actual Transport Cost
+
+The user may enter transport costs manually.
+
+Do NOT pretend the app knows public transport fares automatically.
+
+Allow notes such as:
+
+Itam → Uyo Plaza: ₦400
+Uyo Plaza → Aka Road: ₦300
+
+================================
+26. ROUTE NOTES
+================================
+
+Allow notes for each route leg.
+
+Example:
+
+"Take shuttle from Itam to Uyo Plaza."
+
+"From Plaza take Aka Road vehicle."
+
+"Stop at Kilimanjaro Junction."
+
+"Take bike to customer address."
+
+This is important because Nigerian public transportation does not always follow the same road-routing assumptions as private vehicles.
+
+================================
+27. PRIVATE VEHICLE VS PUBLIC TRANSPORT
+================================
+
+When creating a route, allow:
+
+PRIVATE VEHICLE
+PUBLIC TRANSPORT
+MIXED
+
+For PUBLIC TRANSPORT and MIXED:
+
+Allow manual transport legs.
+
+Example:
+
+LEG 1
+Itak → Uyo Plaza
+Transport: Shuttle
+
+LEG 2
+Uyo Plaza → Aka Road
+Transport: Shuttle
+
+LEG 3
+Aka Road → Customer
+Transport: Bike
+
+The system must not assume a vehicle can directly access every customer address.
+
+================================
+28. ROUTE LEG DESCRIPTION
+================================
+
+Each route leg should show:
+
+FROM
+TO
+ROAD
+LANDMARK
+TRANSPORT
+ESTIMATED DISTANCE
+ESTIMATED TIME
+NOTES
+
+Example:
+
+FROM:
+Uyo Plaza
+
+TO:
+Aka Road
+
+TRANSPORT:
+Shuttle
+
+LANDMARK:
+Aka Road Junction
+
+NOTES:
+Take vehicle heading toward Aka Road.
+
+================================
+29. LOCATION CONFIDENCE
+================================
+
+Customer addresses can be imperfect.
+
+Therefore, every location should have:
+
+LOCATION VERIFIED
+LOCATION NOT VERIFIED
+CUSTOMER CONFIRMED LOCATION
+
+Do not automatically mark an address verified just because geocoding returned coordinates.
+
+Allow the technician to verify it.
+
+================================
+30. GEOCODING
+================================
+
+Where possible, convert customer addresses into coordinates.
+
+Store:
+
+Latitude
+Longitude
+
+If geocoding fails:
+
+show:
+
+LOCATION COULD NOT BE VERIFIED
+
+and allow manual location selection from the map.
+
+Do not invent coordinates.
+
+================================
+31. MAP PROVIDER CONFIGURATION
+================================
+
+Create a clean map service abstraction.
+
+Do not hard-code the entire application to one provider.
+
+Prepare for:
+
+Google Maps
+OpenStreetMap
+Other supported providers
+
+The user should be able to configure API keys where required.
+
+Never expose secret API keys in frontend source code.
+
+================================
+32. OFFLINE FIELD SUPPORT
+================================
+
+The user may lose internet while travelling.
+
+The application should retain:
+
+Current jobs
+Customer information
+Route order
+Landmark notes
+Contact history
+Job status
+
+locally.
+
+When internet returns, synchronize data where a backend is available.
+
+The map/navigation service may require internet.
+
+Do not claim full offline Google Maps functionality unless officially supported.
+
+================================
+33. GPS ERROR HANDLING
+================================
+
+If GPS accuracy is poor:
+
+show:
+
+GPS ACCURACY: 85m
+
+and warning:
+
+"Location accuracy is currently low."
+
+Do not automatically trigger arrival from unreliable GPS.
+
+================================
+34. LOCATION PERMISSIONS
+================================
+
+Provide clear instructions when location permission is denied.
+
+Example:
+
+"Location permission is required for live field navigation."
+
+Buttons:
+
+ENABLE LOCATION
+USE MANUAL LOCATION
+
+Never repeatedly request permission without user action.
+
+================================
+35. ROUTE HISTORY
+================================
+
+Save route history.
+
+For each completed route:
+
+Date
+Start location
+Stops
+End location
+Distance where available
+Duration where available
+Completed jobs
+Skipped jobs
+Cancelled jobs
+
+This will later support Phase 3 analytics.
+
+================================
+36. ROUTE REPORT
+================================
+
+Create a route report.
+
+Example:
+
+DATE:
+21 August 2026
+
+START:
+Itak Junction
+
+STOP 1:
+Customer A
+
+STOP 2:
+Customer B
+
+STOP 3:
+Customer C
+
+FINAL:
+Itak Junction
+
+Show:
+
+Completed
+Skipped
+Postponed
+Cancelled
+
+Transport expenses.
+
+Allow export/print.
+
+================================
+37. SAFETY
+================================
+
+The application must never encourage unsafe phone use while driving.
+
+If the user is moving:
+
+show a clear warning:
+
+"Use navigation safely. Do not operate the phone while driving."
+
+The application should prioritize large simple actions.
+
+================================
+38. PHASE 2 SUCCESS TEST
+================================
+
+Before completing Phase 2, test:
+
+1. GPS permission
+2. Current location
+3. Individual directions
+4. Customer destination
+5. Route creation
+6. Multiple stops
+7. Route reordering
+8. Round-trip mode
+9. Public transport route notes
+10. Landmark notes
+11. Map display
+12. Satellite mode where supported
+13. Arrival detection
+14. Manual arrival override
+15. Going status
+16. Arrived status
+17. Start installation
+18. Complete job
+19. Share location
+20. Route history
+21. Route report
+22. Mobile usability
+23. GPS error handling
+24. Offline preservation of job/route data
+
+Do not proceed to Phase 3.
+
+================================
+FINAL PHASE 2 GOAL
+================================
+
+When Phase 2 is complete, I should be able to:
+
+Open DIGS JobTrack.
+
+See today's jobs.
+
+Select the jobs I want to perform.
+
+Have the app arrange them geographically.
+
+See the complete route.
+
+Start from my current location.
+
+Navigate to Stop 1.
+
+See the customer, address, landmark and route information.
+
+Call/SMS/WhatsApp the customer.
+
+Mark GOING.
+
+Arrive at the location.
+
+Have the app detect arrival when GPS is sufficiently accurate.
+
+Mark ARRIVED.
+
+Start installation.
+
+Complete the job.
+
+Move automatically to the next stop.
+
+Continue until all selected jobs are completed.
+
+Return to my final destination.
+
+Review the complete route history and report.
+
+BUILD PHASE 2 NOW.
+
+Do not modify the scope into Phase 3.

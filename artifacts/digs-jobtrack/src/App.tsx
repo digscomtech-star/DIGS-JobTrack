@@ -1,11 +1,13 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   ArrowLeft, ArrowRight, BarChart3, CalendarDays, Check, CheckCircle2,
   ChevronRight, ClipboardList, Download, Filter, LayoutDashboard,
   MapPin, MessageCircle, MoreHorizontal, Pencil, Phone, Plus, Printer, RefreshCw,
   Search, Settings as SettingsIcon, SlidersHorizontal, Users,
-  Wrench, X, Zap
+  Wrench, X, Zap, Navigation, LocateFixed, Share2, Route as RouteIcon, Map,
+  Satellite, GripVertical, PlusCircle, MinusCircle, ShieldAlert, CheckCircle,
+  CircleDot, Play, SkipForward, SkipBack, Home as HomeIcon, Save, Edit3
 } from 'lucide-react';
 import {
   getGetDashboardQueryKey, getGetJobQueryKey, getGetReportsQueryKey, getGetSettingsQueryKey,
@@ -50,6 +52,53 @@ function isToday(value?: string | null) {
   return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
 }
 
+type Coordinates = { latitude: number; longitude: number; accuracy?: number; capturedAt?: string };
+type LocationState = { status: 'idle' | 'enabled' | 'disabled' | 'required' | 'unavailable'; coords?: Coordinates; error?: string };
+type RouteStop = { jobId: number; coords?: Coordinates; distance?: number; minutes?: number; status?: string };
+const locationKey = 'digs-jobtrack-location';
+const routeKey = 'digs-jobtrack-active-route';
+const locationNotesKey = (id: number) => `digs-jobtrack-location-notes-${id}`;
+
+function useFieldLocation() {
+  const [location, setLocation] = useState<LocationState>(() => {
+    try { const saved = JSON.parse(localStorage.getItem(locationKey) || 'null'); return saved?.coords ? { status: 'enabled', coords: saved.coords } : { status: 'idle' }; } catch { return { status: 'idle' }; }
+  });
+  const refresh = () => {
+    if (!navigator.geolocation) { setLocation({ status: 'unavailable', error: 'This device does not provide browser location.' }); return; }
+    setLocation((current) => ({ ...current, status: 'required', error: undefined }));
+    navigator.geolocation.getCurrentPosition((position) => {
+      const coords = { latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAt: new Date().toISOString() };
+      localStorage.setItem(locationKey, JSON.stringify(coords));
+      setLocation({ status: 'enabled', coords });
+    }, (error) => {
+      const denied = error.code === error.PERMISSION_DENIED;
+      setLocation({ status: denied ? 'disabled' : 'unavailable', error: denied ? 'Location permission is required for live field navigation.' : error.message });
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  };
+  return { location, refresh };
+}
+
+function mapLink(address: string, start?: Coordinates) {
+  const destination = encodeURIComponent(address);
+  const origin = start ? `&origin=${start.latitude},${start.longitude}` : '';
+  return `https://www.google.com/maps/dir/?api=1${origin}&destination=${destination}&travelmode=driving`;
+}
+function shareLink(coords?: Coordinates) {
+  return coords ? `https://www.google.com/maps/search/?api=1&query=${coords.latitude},${coords.longitude}` : '';
+}
+function metersBetween(a: Coordinates, b: Coordinates) {
+  const rad = (value: number) => value * Math.PI / 180;
+  const earth = 6371000;
+  const dLat = rad(b.latitude - a.latitude);
+  const dLon = rad(b.longitude - a.longitude);
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLon / 2) ** 2;
+  return Math.round(earth * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)));
+}
+function formatDistance(meters?: number) {
+  if (meters == null) return '—';
+  return meters < 1000 ? `${meters} m` : `${(meters / 1000).toFixed(1)} km`;
+}
+
 function NavItem({ href, label, icon: Icon, exact = false }: { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }) {
   const [location] = useLocation();
   const active = exact ? location === href : location === href || location.startsWith(`${href}/`);
@@ -66,6 +115,8 @@ function Shell({ children }: { children: React.ReactNode }) {
     { href: '/', label: 'Overview', icon: LayoutDashboard, exact: true },
     { href: '/today', label: 'Today', icon: Zap },
     { href: '/jobs', label: 'Jobs', icon: ClipboardList },
+    { href: '/route', label: 'Route', icon: RouteIcon },
+    { href: '/field', label: 'Field mode', icon: Navigation },
     { href: '/contacts', label: 'Contacts', icon: Users },
     { href: '/reports', label: 'Reports', icon: BarChart3 },
     { href: '/settings', label: 'Settings', icon: SettingsIcon }
@@ -120,6 +171,81 @@ function StatCards({ dashboard }: { dashboard?: { total: number; today: number; 
   return <div className="grid stats-grid">{stats.map(([label, number, note, accent]) => <div className="stat-card" key={label}>
     <div className="stat-label">{label}</div><div className={`stat-number ${accent}`}>{number}</div><div className="stat-note">{note}</div>
   </div>)}</div>;
+}
+
+function LocationPanel({ compact = false }: { compact?: boolean }) {
+  const { location, refresh } = useFieldLocation();
+  const accuracyLabel = location.coords?.accuracy == null ? '—' : `${Math.round(location.coords.accuracy)}m`;
+  const statusLabel = location.status === 'enabled' ? 'LOCATION ENABLED' : location.status === 'disabled' ? 'LOCATION DISABLED' : location.status === 'required' ? 'LOCATION PERMISSION REQUIRED' : location.status === 'unavailable' ? 'LOCATION UNAVAILABLE' : 'LOCATION NOT SET';
+  return <section className={`panel location-panel ${compact ? 'compact' : ''}`}>
+    <div className="panel-header"><div><div className="panel-title"><LocateFixed size={16} /> My location</div><div className="panel-kicker">Used for directions and arrival checks</div></div><span className={`location-state ${location.status}`}>{statusLabel}</span></div>
+    {location.coords ? <div className="location-readout"><div><span className="data-label">Latitude</span><strong>{location.coords.latitude.toFixed(6)}</strong></div><div><span className="data-label">Longitude</span><strong>{location.coords.longitude.toFixed(6)}</strong></div><div><span className="data-label">Accuracy</span><strong>{accuracyLabel}</strong></div></div> : <div className="location-empty"><LocateFixed size={22} /><span>{location.error || 'Allow location access to use live field navigation.'}</span></div>}
+    {location.coords?.accuracy && location.coords.accuracy > 50 ? <div className="notice warning"><ShieldAlert size={14} /> Location accuracy is currently low. Arrival detection is paused until GPS improves.</div> : null}
+    <button className="btn small" onClick={refresh} data-testid="button-refresh-location"><RefreshCw size={14} /> {location.status === 'required' ? 'Requesting location…' : 'Refresh location'}</button>
+  </section>;
+}
+
+function RoutePlanner() {
+  const jobs = useListJobs({ query: { queryKey: getListJobsQueryKey() } });
+  const { location, refresh } = useFieldLocation();
+  const [selected, setSelected] = useState<number[]>(() => { try { return JSON.parse(localStorage.getItem(routeKey) || '{}').stops || []; } catch { return []; } });
+  const [manualCoords, setManualCoords] = useState<Record<number, Coordinates>>({});
+  const [finalDestination, setFinalDestination] = useState('');
+  const [roundTrip, setRoundTrip] = useState(true);
+  const [mode, setMode] = useState<'optimized' | 'manual'>('optimized');
+  const [routeStarted, setRouteStarted] = useState(false);
+  const [notice, setNotice] = useState('');
+  const selectedJobs = (jobs.data || []).filter((job) => selected.includes(job.id));
+  const orderedJobs = useMemo(() => {
+    if (mode === 'manual') return selectedJobs;
+    const origin = location.coords;
+    if (!origin) return selectedJobs;
+    return [...selectedJobs].sort((a, b) => {
+      const ac = manualCoords[a.id]; const bc = manualCoords[b.id];
+      if (!ac && !bc) return 0; if (!ac) return 1; if (!bc) return -1;
+      return metersBetween(origin, ac) - metersBetween(origin, bc);
+    });
+  }, [selectedJobs, mode, location.coords, manualCoords]);
+  const stops: RouteStop[] = orderedJobs.map((job, index) => {
+    const coords = manualCoords[job.id];
+    const previous = index === 0 ? location.coords : manualCoords[orderedJobs[index - 1].id];
+    return { jobId: job.id, coords, distance: coords && previous ? metersBetween(previous, coords) : undefined, minutes: coords && previous ? Math.max(1, Math.round((metersBetween(previous, coords) / 1000) * 3)) : undefined, status: job.status };
+  });
+  const persist = (nextSelected = selected, nextStops = stops) => localStorage.setItem(routeKey, JSON.stringify({ stops: nextSelected, routeStops: nextStops, finalDestination, roundTrip, updatedAt: new Date().toISOString() }));
+  const toggle = (id: number) => { const next = selected.includes(id) ? selected.filter((value) => value !== id) : [...selected, id]; setSelected(next); persist(next); };
+  const reorder = (index: number, direction: -1 | 1) => { const next = [...selected]; const target = index + direction; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; setSelected(next); setMode('manual'); persist(next); };
+  const startRoute = () => { if (!location.coords) { refresh(); setNotice('Enable location or enter manual start coordinates before starting a route.'); return; } setRouteStarted(true); persist(); setNotice('Route active. Use navigation safely and do not operate the phone while driving.'); };
+  if (jobs.isLoading) return <div className="page"><LoadingPanel /></div>;
+  return <div className="page">
+    <div className="page-heading"><div><div className="eyebrow">Field movement / route planning</div><h1 className="page-title">Complete job route</h1><p className="page-subtitle">Choose stops, reduce backtracking, then move through the route one job at a time.</p></div><div className="actions"><Link href="/field" className="btn"><Zap size={15} /> Field mode</Link><button className="btn primary" onClick={startRoute} data-testid="button-start-route"><Navigation size={15} /> Start route</button></div></div>
+    {notice && <div className="notice warning"><ShieldAlert size={14} /> {notice}</div>}
+    <div className="route-layout"><div className="grid">
+      <LocationPanel />
+      <section className="panel"><div className="panel-header"><div><div className="panel-title">Select today’s stops</div><div className="panel-kicker">Jobs stay in your register; this only changes the route</div></div><span className="badge">{selected.length} selected</span></div>
+        {(jobs.data || []).filter((job) => !['COMPLETED', 'CANCELLED'].includes(job.status)).map((job) => <label className={`route-job-option ${selected.includes(job.id) ? 'selected' : ''}`} key={job.id}><input type="checkbox" checked={selected.includes(job.id)} onChange={() => toggle(job.id)} /><span><strong>{job.customerName}</strong><small>{job.customerAddress || job.area || 'Address not set'} · {human(job.status)}</small></span><Link href={`/jobs/${job.id}`} onClick={(event) => event.stopPropagation()} className="icon-btn"><ChevronRight size={15} /></Link></label>)}
+      </section>
+    </div><div className="grid">
+      <section className="panel"><div className="panel-header"><div><div className="panel-title">Route controls</div><div className="panel-kicker">Optimized uses saved coordinates; manual keeps your chosen order</div></div></div><div className="segmented"><button className={mode === 'optimized' ? 'active' : ''} onClick={() => setMode('optimized')}>Optimized</button><button className={mode === 'manual' ? 'active' : ''} onClick={() => setMode('manual')}>Manual</button></div><label className="route-setting"><span>Round trip</span><input type="checkbox" checked={roundTrip} onChange={(event) => { setRoundTrip(event.target.checked); persist(); }} /></label><div className="field"><label htmlFor="final-destination">Final destination</label><input id="final-destination" className="input" value={finalDestination} onChange={(event) => setFinalDestination(event.target.value)} onBlur={() => persist()} placeholder={roundTrip ? 'Current location' : 'Optional final destination'} /></div></section>
+      <section className="panel"><div className="panel-header"><div><div className="panel-title"><RouteIcon size={16} /> Route table</div><div className="panel-kicker">{routeStarted ? 'Active route · keep JobTrack visible between stops' : 'Add coordinates to improve distance estimates'}</div></div><span className="mono muted">{stops.length} stops</span></div>
+        {stops.length ? <div className="route-table">{stops.map((stop, index) => { const job = orderedJobs[index]; const coords = manualCoords[job.id]; return <div className="route-stop" key={job.id}><div className="stop-number">{index + 1}</div><div className="stop-copy"><strong>{job.customerName}</strong><span>{job.customerAddress || job.area || 'Address not set'}</span><div className="stop-meta">{formatDistance(stop.distance)} · {stop.minutes ? `${stop.minutes} min est.` : 'Time unavailable'} · {human(job.status)}</div><div className="manual-coords"><input className="input" placeholder="Latitude" value={coords?.latitude ?? ''} onChange={(event) => setManualCoords((current) => ({ ...current, [job.id]: { ...(current[job.id] || { longitude: 0 }), latitude: Number(event.target.value) } }))} /><input className="input" placeholder="Longitude" value={coords?.longitude ?? ''} onChange={(event) => setManualCoords((current) => ({ ...current, [job.id]: { ...(current[job.id] || { latitude: 0 }), longitude: Number(event.target.value) } }))} /></div></div><div className="stop-actions"><button className="icon-btn" onClick={() => reorder(index, -1)} aria-label="Move stop up"><SkipBack size={15} /></button><button className="icon-btn" onClick={() => reorder(index, 1)} aria-label="Move stop down"><SkipForward size={15} /></button><a className="btn small" href={mapLink(job.customerAddress || job.area || job.customerName, location.coords)} target="_blank" rel="noreferrer"><Navigation size={13} /> Navigate</a><button className="icon-btn danger" onClick={() => toggle(job.id)} aria-label="Remove route stop"><MinusCircle size={15} /></button></div></div>; })}</div> : <div className="empty"><RouteIcon size={22} /><strong>No stops selected</strong>Select jobs to build your route.</div>}
+      </section>
+    </div></div>
+  </div>;
+}
+
+function FieldMode() {
+  const jobs = useListJobs({ query: { queryKey: getListJobsQueryKey() } });
+  const { location, refresh } = useFieldLocation();
+  const [index, setIndex] = useState(0);
+  const [routeIds] = useState<number[]>(() => { try { return JSON.parse(localStorage.getItem(routeKey) || '{}').stops || []; } catch { return []; } });
+  const routeJobs = (jobs.data || []).filter((job) => routeIds.includes(job.id));
+  const current = routeJobs[index];
+  const update = useUpdateJob();
+  if (jobs.isLoading) return <div className="page"><LoadingPanel /></div>;
+  if (!current) return <div className="page"><div className="empty field-empty"><RouteIcon size={28} /><strong>No active route</strong><span>Select jobs in Complete job route before opening Field mode.</span><Link href="/route" className="btn primary">Plan a route</Link></div></div>;
+  const mark = (status: string) => update.mutate({ id: current.id, data: { status } as never }, { onSuccess: () => void jobs.refetch() });
+  const url = mapLink(current.customerAddress || current.area || current.customerName, location.coords);
+  return <div className="page field-mode"><div className="page-heading"><div><div className="eyebrow">Active field mode</div><h1 className="page-title">Stop {index + 1} of {routeJobs.length}</h1><p className="page-subtitle">Large controls for the road. Do not operate the phone while driving.</p></div><Link href="/route" className="btn"><RouteIcon size={15} /> Route overview</Link></div><div className="safety-banner"><ShieldAlert size={18} /><strong>Use navigation safely. Do not operate the phone while driving.</strong></div><section className="field-card"><div className="eyebrow">Current job · {current.jobId}</div><h2>{current.customerName}</h2><div className="field-destination"><MapPin size={18} /><span>{current.customerAddress || current.area || 'Address not set'}</span></div><div className="field-landmark"><span>FIELD NAVIGATION DESCRIPTION</span><strong>{localStorage.getItem(locationNotesKey(current.id)) || 'No verified landmark notes yet.'}</strong></div><div className="field-metrics"><div><span>STATUS</span><strong>{human(current.status)}</strong></div><div><span>NEXT STOP</span><strong>{routeJobs[index + 1]?.customerName || (routeJobs.length > 1 ? 'Return / final' : '—')}</strong></div><div><span>GPS</span><strong>{location.coords ? `${Math.round(location.coords.accuracy || 0)}m accuracy` : 'Not enabled'}</strong></div></div><div className="field-actions"><a className="btn urgent large" href={url} target="_blank" rel="noreferrer"><Navigation size={18} /> Open directions</a><a className="btn large" href={`tel:${current.customerPhone}`}><Phone size={18} /> Call</a><a className="btn large" href={`https://wa.me/${current.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"><MessageCircle size={18} /> WhatsApp</a><button className="btn large" onClick={() => location.coords ? mark('ARRIVED') : refresh()}><LocateFixed size={18} /> {location.coords ? 'Mark arrived' : 'Enable location'}</button><button className="btn primary large" onClick={() => mark(current.status === 'ARRIVED' ? 'IN_PROGRESS' : 'GOING')}><Play size={18} /> {current.status === 'ARRIVED' ? 'Start installation' : 'Mark going'}</button></div></section><div className="field-stepper"><button className="btn" disabled={index === 0} onClick={() => setIndex(index - 1)}><ArrowLeft size={15} /> Previous job</button><span>{current.status === 'COMPLETED' ? 'Completed' : 'Keep this stop visible until finished'}</span><button className="btn" disabled={index >= routeJobs.length - 1} onClick={() => setIndex(index + 1)}>Next job <ArrowRight size={15} /></button></div></div>;
 }
 
 function JobRow({ job }: { job: Job }) {
@@ -252,6 +378,12 @@ function Detail() {
   const [edit, setEdit] = useState(false);
   const [contact, setContact] = useState(false);
   const [notice, setNotice] = useState('');
+  const { location, refresh } = useFieldLocation();
+  const [locationNotes, setLocationNotes] = useState('');
+  const [showLocationEditor, setShowLocationEditor] = useState(false);
+  useEffect(() => {
+    if (id) setLocationNotes(localStorage.getItem(locationNotesKey(id)) || '');
+  }, [id]);
   const changeStatus = (status: string) => update.mutate({ id, data: { status } as never }, { onSuccess: () => { setNotice(`Job marked ${human(status).toLowerCase()}.`); void job.refetch(); } });
   if (job.isLoading) return <div className="page"><div className="detail-hero skeleton" style={{ height: 180 }} /><div className="panel skeleton" style={{ height: 230 }} /></div>;
   if (job.isError || !job.data) return <div className="page"><ErrorNotice onRetry={() => void job.refetch()} /></div>;
@@ -260,14 +392,15 @@ function Detail() {
     <div className="actions" style={{ marginBottom: 18 }}><Link href="/jobs" className="btn ghost small" data-testid="link-back-jobs"><ArrowLeft size={15} /> Back to jobs</Link><span className="muted mono">/ {current.jobId}</span></div>
     {notice && <div className="notice" data-testid="status-job-updated"><CheckCircle2 size={15} style={{ verticalAlign: '-3px', marginRight: 7 }} />{notice}</div>}
     <div className="detail-hero"><div className="hero-content"><div className="eyebrow">Installation record · {current.jobId}</div><h1 className="detail-title">{current.customerName}</h1><div className="detail-address"><MapPin size={13} style={{ verticalAlign: '-2px', marginRight: 4 }} />{current.customerAddress || current.area || 'Address not set'}</div><div className="detail-tags"><span className={`badge priority-${current.priority.toLowerCase()}`}>{current.priority} priority</span><span className="badge">{human(current.status)}</span><span className="badge">{current.deviceType || 'MTN ODU'}</span></div></div></div>
-    <div className="detail-layout">
+     <div className="detail-layout">
       <div className="grid">
+         <section className="panel location-panel"><div className="panel-header"><div><div className="panel-title"><Map size={16} /> Location & navigation</div><div className="panel-kicker">Phase 2 field context · address remains separate from verified notes</div></div><span className={`location-state ${location.status}`}>{location.status === 'enabled' ? 'GPS READY' : 'GPS NOT SET'}</span></div><div className="location-destination"><div><span className="data-label">Official address</span><strong>{current.customerAddress || current.area || 'Address not set'}</strong></div><div><span className="data-label">Field navigation description</span><strong>{locationNotes || 'No landmark or location notes added.'}</strong></div></div><div className="actions"><a className="btn urgent" href={mapLink(current.customerAddress || current.area || current.customerName, location.coords)} target="_blank" rel="noreferrer" data-testid="link-directions"><Navigation size={15} /> Directions</a><button className="btn" onClick={() => { if (!location.coords) refresh(); else { const link = shareLink(location.coords); void navigator.share?.({ title: 'My DIGS JobTrack location', text: 'My current location', url: link }); if (!navigator.share) window.open(`sms:?&body=${encodeURIComponent(`My current location: ${link}`)}`, '_blank'); } }} data-testid="button-share-location"><Share2 size={15} /> Share my location</button><button className="btn" onClick={() => setShowLocationEditor((value) => !value)}><Edit3 size={15} /> Edit landmarks</button></div>{showLocationEditor && <div className="location-editor"><textarea className="textarea" value={locationNotes} onChange={(event) => setLocationNotes(event.target.value)} placeholder="Primary landmark, junction, road, or additional directions. Only add verified information." /><button className="btn primary small" onClick={() => { localStorage.setItem(locationNotesKey(id), locationNotes); setShowLocationEditor(false); setNotice('Field navigation description saved.'); }}><Save size={14} /> Save location notes</button></div>}</section>
         <section className="panel"><div className="panel-header"><div><div className="panel-title">Job brief</div><div className="panel-kicker">The details you need before you roll</div></div><button className="btn small" onClick={() => setEdit(true)} data-testid="button-edit-job"><Pencil size={13} /> Edit</button></div><div className="detail-grid">{[['Customer phone', current.customerPhone], ['Customer email', current.customerEmail], ['Area', current.area], ['State', current.state], ['Scheduled', dateLabel(current.scheduledDate)], ['Outlet', current.outletName], ['Agent', current.agentName], ['Deal code', current.dealCode], ['Device number', current.deviceNumber], ['Device IMEI', current.deviceImei], ['Shop pick', current.shopPickName], ['Shop location', current.shopPickLocation]].map(([label, value]) => <div className="data-cell" key={label}><div className="data-label">{label}</div><div className="data-value">{value || '—'}</div></div>)}</div></section>
         <section className="panel"><div className="panel-header"><div><div className="panel-title">Installation notes</div><div className="panel-kicker">Visible context for the next step</div></div><Wrench size={17} className="muted" /></div><p className="page-subtitle">{current.notes || 'No customer notes have been added.'}</p>{current.installationNotes && <><div className="data-label mt">Completion notes</div><p className="page-subtitle">{current.installationNotes}</p></>}</section>
         <section className="panel"><div className="panel-header"><div><div className="panel-title">Contact trail</div><div className="panel-kicker">{current.contacts?.length || 0} logged touchpoints</div></div><button className="btn primary small" onClick={() => setContact(true)} data-testid="button-log-contact"><Plus size={13} /> Log contact</button></div>{current.contacts?.length ? <div className="timeline">{current.contacts.map((item) => <div className="timeline-item" key={item.id}><div className="timeline-top"><span>{item.method} · {item.result}</span><span className="timeline-date">{item.date} {item.time}</span></div><div className="timeline-note">{item.notes || 'No note attached.'}</div></div>)}</div> : <div className="empty"><MessageCircle size={22} /><strong>No contact history yet</strong>Log the first call, message or visit.</div>}</section>
       </div>
       <aside className="grid">
-        <section className="panel"><div className="panel-header"><div><div className="panel-title">Next action</div><div className="panel-kicker">One tap, then keep moving</div></div><Zap size={17} className="muted" /></div><div className="action-stack"><a className="btn urgent" href={`tel:${current.customerPhone}`} data-testid="link-call-customer"><Phone size={15} /> Call customer</a><a className="btn" href={`https://wa.me/${current.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" data-testid="link-whatsapp-customer"><MessageCircle size={15} /> Open WhatsApp</a><button className="btn" onClick={() => changeStatus('GOING')} disabled={update.isPending || current.status === 'GOING'} data-testid="button-mark-going"><ArrowRight size={15} /> Mark going</button><button className="btn primary" onClick={() => changeStatus('COMPLETED')} disabled={update.isPending || current.status === 'COMPLETED'} data-testid="button-mark-complete"><CheckCircle2 size={15} /> Mark completed</button></div></section>
+         <section className="panel"><div className="panel-header"><div><div className="panel-title">Next action</div><div className="panel-kicker">One tap, then keep moving</div></div><Zap size={17} className="muted" /></div><div className="action-stack"><a className="btn urgent" href={`tel:${current.customerPhone}`} data-testid="link-call-customer"><Phone size={15} /> Call customer</a><a className="btn" href={`https://wa.me/${current.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" data-testid="link-whatsapp-customer"><MessageCircle size={15} /> Open WhatsApp</a><button className="btn" onClick={() => changeStatus('GOING')} disabled={update.isPending || current.status === 'GOING'} data-testid="button-mark-going"><ArrowRight size={15} /> Mark going</button><button className="btn" onClick={() => changeStatus('ARRIVED')} disabled={update.isPending || current.status === 'ARRIVED'} data-testid="button-mark-arrived"><LocateFixed size={15} /> Mark arrived</button><button className="btn" onClick={() => changeStatus('IN_PROGRESS')} disabled={update.isPending || current.status === 'IN_PROGRESS'} data-testid="button-start-installation"><Play size={15} /> Start installation</button><button className="btn primary" onClick={() => changeStatus('COMPLETED')} disabled={update.isPending || current.status === 'COMPLETED'} data-testid="button-mark-complete"><CheckCircle2 size={15} /> Complete job</button></div></section>
         <section className="panel"><div className="panel-header"><div><div className="panel-title">Costs</div><div className="panel-kicker">Record the run, not just the result</div></div></div><div className="expense-total"><div><div className="data-label" style={{ color: 'inherit', opacity: .6 }}>Total expenses</div><div className="stat-number">{currency(current.totalExpenses)}</div></div><BarChart3 size={23} /></div><div className="detail-grid mt"><div className="data-cell"><div className="data-label">Transport</div><div className="data-value">{currency(current.transportCost)}</div></div><div className="data-cell"><div className="data-label">Other</div><div className="data-value">{currency(current.otherExpenses)}</div></div></div></section>
         <section className="panel"><div className="panel-header"><div><div className="panel-title">Workflow</div><div className="panel-kicker">Move the record to the right lane</div></div></div><select className="select" value={current.status} onChange={(event) => changeStatus(event.target.value)} data-testid="select-detail-status">{statuses.map((item) => <option key={item}>{item}</option>)}</select></section>
       </aside>
@@ -349,6 +482,8 @@ function Router() {
     <Route path="/" component={Dashboard} />
     <Route path="/jobs" component={Jobs} />
     <Route path="/jobs/:id" component={Detail} />
+    <Route path="/route" component={RoutePlanner} />
+    <Route path="/field" component={FieldMode} />
     <Route path="/today" component={Today} />
     <Route path="/contacts" component={Contacts} />
     <Route path="/reports" component={Reports} />
