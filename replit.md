@@ -1,6 +1,6 @@
-# [Project name]
+# DIGS JobTrack
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A mobile-first field installation operations app for receiving, organizing, contacting, scheduling, completing, and reporting MTN ODU jobs.
 
 ## Run & Operate
 
@@ -22,23 +22,28 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/digs-jobtrack/src/` — responsive JobTrack web interface and route screens
+- `artifacts/api-server/src/routes/jobs.ts` — jobs, contacts, dashboard, settings, and reports API
+- `lib/db/src/schema/jobs.ts` — persistent PostgreSQL schema for jobs, contacts, and settings
+- `lib/api-spec/openapi.yaml` — API contract source of truth
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Phase 1 deliberately uses a persistent PostgreSQL data layer while leaving GPS, maps, route optimization, and automation out of the product surface.
+- Native call, SMS, and WhatsApp actions stay device-level; contact history records the action/result without claiming cellular answer detection.
+- Calendar-only job dates are stored as PostgreSQL `date` values to avoid timezone shifts.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Users can manage the full Phase 1 installation workflow: import and create jobs, search/filter the register, contact customers, schedule or postpone work, record completion and expenses, review reports, and configure message templates.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Build only Phase 1 until the user explicitly requests a later phase.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Regenerate API clients with `pnpm --filter @workspace/api-spec run codegen` after changing `lib/api-spec/openapi.yaml`.
 
 ## Pointers
 

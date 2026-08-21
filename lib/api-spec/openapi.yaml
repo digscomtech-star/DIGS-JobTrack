@@ -10,6 +10,16 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: jobs
+    description: Installation jobs
+  - name: dashboard
+    description: Dashboard summaries
+  - name: contacts
+    description: Contact history
+  - name: settings
+    description: User settings
+  - name: reports
+    description: Reporting and exports
 paths:
   /healthz:
     get:
@@ -24,7 +34,153 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List jobs
+      responses:
+        "200":
+          description: Jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Create a job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobInput"
+      responses:
+        "201":
+          description: Created job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get a job
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateJob
+      tags: [jobs]
+      summary: Update a job
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobUpdate"
+      responses:
+        "200":
+          description: Updated job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+  /jobs/{id}/contacts:
+    post:
+      operationId: createContact
+      tags: [contacts]
+      summary: Add a contact event
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInput"
+      responses:
+        "201":
+          description: Contact event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contact"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard counts
+      responses:
+        "200":
+          description: Dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsInput"
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+  /reports:
+    get:
+      operationId: getReports
+      tags: [reports]
+      summary: Get report aggregates
+      responses:
+        "200":
+          description: Report data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reports"
 components:
+  parameters:
+    JobId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: number
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +189,137 @@ components:
           type: string
       required:
         - status
+    Job:
+      type: object
+      required: [id, jobId, customerName, customerPhone, status, priority]
+      properties:
+        id: { type: number }
+        jobId: { type: string }
+        customerName: { type: string }
+        customerPhone: { type: string }
+        customerEmail: { type: ["string", "null"] }
+        customerAddress: { type: ["string", "null"] }
+        state: { type: ["string", "null"] }
+        area: { type: ["string", "null"] }
+        installationDate: { type: ["string", "null"] }
+        outletName: { type: ["string", "null"] }
+        agentName: { type: ["string", "null"] }
+        dealCode: { type: ["string", "null"] }
+        shopPickName: { type: ["string", "null"] }
+        shopPickLocation: { type: ["string", "null"] }
+        deviceNumber: { type: ["string", "null"] }
+        deviceImei: { type: ["string", "null"] }
+        deviceType: { type: ["string", "null"] }
+        jobSource: { type: ["string", "null"] }
+        dateReceived: { type: ["string", "null"] }
+        assignedDate: { type: ["string", "null"] }
+        scheduledDate: { type: ["string", "null"] }
+        priority: { type: string, enum: [URGENT, HIGH, NORMAL, LOW] }
+        status: { type: string, enum: [NEW, CONTACTED, CONFIRMED, GOING, ARRIVED, IN_PROGRESS, COMPLETED, ON_HOLD, POSTPONED, CANCELLED, UNREACHABLE] }
+        notes: { type: ["string", "null"] }
+        internalNotes: { type: ["string", "null"] }
+        contactStatus: { type: ["string", "null"] }
+        lastContactDate: { type: ["string", "null"] }
+        nextFollowUpDate: { type: ["string", "null"] }
+        postponementDate: { type: ["string", "null"] }
+        postponementReason: { type: ["string", "null"] }
+        completionDate: { type: ["string", "null"] }
+        completionTime: { type: ["string", "null"] }
+        transportCost: { type: number }
+        otherExpenses: { type: number }
+        expenseDescription: { type: ["string", "null"] }
+        totalExpenses: { type: number }
+        customerConfirmation: { type: ["string", "null"] }
+        installationNotes: { type: ["string", "null"] }
+        contacts:
+          type: array
+          items: { $ref: "#/components/schemas/Contact" }
+    JobInput:
+      allOf:
+        - $ref: "#/components/schemas/Job"
+      description: Job fields accepted when creating a job; server-owned id and contacts are ignored.
+    JobUpdate:
+      type: object
+      additionalProperties: true
+      properties:
+        customerName: { type: string }
+        customerPhone: { type: string }
+        customerEmail: { type: ["string", "null"] }
+        customerAddress: { type: ["string", "null"] }
+        state: { type: ["string", "null"] }
+        area: { type: ["string", "null"] }
+        installationDate: { type: ["string", "null"] }
+        scheduledDate: { type: ["string", "null"] }
+        priority: { type: string, enum: [URGENT, HIGH, NORMAL, LOW] }
+        status: { type: string, enum: [NEW, CONTACTED, CONFIRMED, GOING, ARRIVED, IN_PROGRESS, COMPLETED, ON_HOLD, POSTPONED, CANCELLED, UNREACHABLE] }
+        notes: { type: ["string", "null"] }
+        internalNotes: { type: ["string", "null"] }
+        contactStatus: { type: ["string", "null"] }
+        nextFollowUpDate: { type: ["string", "null"] }
+        postponementDate: { type: ["string", "null"] }
+        postponementReason: { type: ["string", "null"] }
+        completionDate: { type: ["string", "null"] }
+        completionTime: { type: ["string", "null"] }
+        transportCost: { type: number }
+        otherExpenses: { type: number }
+        expenseDescription: { type: ["string", "null"] }
+        totalExpenses: { type: number }
+        customerConfirmation: { type: ["string", "null"] }
+        installationNotes: { type: ["string", "null"] }
+    Contact:
+      type: object
+      required: [id, jobId, date, time, method, result]
+      properties:
+        id: { type: number }
+        jobId: { type: number }
+        date: { type: string }
+        time: { type: string }
+        method: { type: string, enum: [CALL, SMS, WHATSAPP, IN_PERSON] }
+        result: { type: string }
+        notes: { type: ["string", "null"] }
+    ContactInput:
+      type: object
+      required: [method, result]
+      properties:
+        method: { type: string, enum: [CALL, SMS, WHATSAPP, IN_PERSON] }
+        result: { type: string }
+        notes: { type: string }
+    Dashboard:
+      type: object
+      required: [total, today, completedToday, remainingToday, followUps, awaitingResponse, byStatus]
+      properties:
+        total: { type: number }
+        today: { type: number }
+        completedToday: { type: number }
+        remainingToday: { type: number }
+        followUps: { type: number }
+        awaitingResponse: { type: number }
+        byStatus:
+          type: object
+          additionalProperties: { type: number }
+    Settings:
+      type: object
+      required: [id, name, phone, whatsapp, currency, defaultStatus, defaultPriority, smsTemplates, whatsappTemplates]
+      properties:
+        id: { type: number }
+        name: { type: string }
+        phone: { type: string }
+        whatsapp: { type: string }
+        currency: { type: string }
+        defaultStatus: { type: string }
+        defaultPriority: { type: string }
+        smsTemplates: { type: object, additionalProperties: { type: string } }
+        whatsappTemplates: { type: object, additionalProperties: { type: string } }
+    SettingsInput:
+      allOf:
+        - $ref: "#/components/schemas/Settings"
+    Reports:
+      type: object
+      required: [byStatus, byAgent, byArea, transportExpenses, totalExpenses]
+      properties:
+        byStatus: { type: object, additionalProperties: { type: number } }
+        byAgent: { type: object, additionalProperties: { type: number } }
+        byArea: { type: object, additionalProperties: { type: number } }
+        transportExpenses: { type: number }
+        totalExpenses: { type: number }
 

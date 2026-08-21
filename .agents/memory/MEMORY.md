@@ -1,0 +1,1 @@
+- [API codegen compatibility](api-codegen-zod.md) — generated Zod schemas currently require Zod 3-compatible numeric handling for integer-like fields.

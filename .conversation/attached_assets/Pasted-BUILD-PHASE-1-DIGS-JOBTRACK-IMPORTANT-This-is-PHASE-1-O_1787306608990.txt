@@ -1,0 +1,819 @@
+BUILD PHASE 1 — DIGS JOBTRACK
+================================
+
+IMPORTANT:
+This is PHASE 1 ONLY.
+
+Do NOT start Phase 2 or Phase 3.
+Do NOT add GPS navigation, live tracking, route optimization, satellite maps, geofencing, or advanced AI yet.
+
+Do NOT throw away or unnecessarily rebuild existing work.
+First inspect the existing project and preserve anything useful.
+Then implement and improve Phase 1 below.
+
+PROJECT NAME:
+DIGS JobTrack
+
+PURPOSE:
+A professional mobile-first field-installation job management system for managing MTN ODU installation jobs received from WRKMAN.
+
+The application should help me receive jobs, organize them, contact customers, track responses, schedule installations, record completed/failed/postponed jobs, keep evidence and expenses, and produce professional reports.
+
+The application must be simple enough to operate quickly from an Android phone while working in the field.
+
+================================
+1. CORE JOB RECORD
+================================
+
+Every job must support these fields:
+
+- Job ID
+- Customer Name
+- Customer Phone
+- Customer Email
+- Customer Address
+- State
+- Area/LGA
+- Installation Date
+- Outlet Name
+- Agent/Rep Name
+- Deal Code
+- Shop Pick Name
+- Shop Pick Up Location
+- ODU Device Number
+- ODU Device IMEI
+- Device Type
+- Job Source
+- Date Received
+- Assigned Date
+- Scheduled Date
+- Priority
+- Status
+- Notes
+- Internal Notes
+- Contact Status
+- Last Contact Date
+- Next Follow-up Date
+- Postponement Date
+- Postponement Reason
+- Completion Date
+- Completion Time
+- Transport Cost
+- Other Expenses
+- Total Expenses
+- Customer Confirmation
+- Installation Notes
+- Evidence/Attachments
+
+The system must allow fields to be empty when the source information does not contain them.
+
+Do NOT invent missing customer information.
+
+================================
+2. JOB STATUSES
+================================
+
+Create these statuses:
+
+NEW
+CONTACTED
+CONFIRMED
+GOING
+ARRIVED
+IN PROGRESS
+COMPLETED
+ON HOLD
+POSTPONED
+CANCELLED
+UNREACHABLE
+
+Use clear visual status indicators.
+
+COMPLETED jobs should be clearly separated from active/pending jobs.
+
+CANCELLED jobs should be retained in history.
+
+ON HOLD and UNREACHABLE jobs must remain visible so they are not forgotten.
+
+================================
+3. PRIORITY SYSTEM
+================================
+
+Each job must have:
+
+URGENT
+HIGH
+NORMAL
+LOW
+
+The system should intelligently prioritize:
+
+1. Confirmed customers
+2. Customers who have responded
+3. Jobs scheduled for today
+4. Jobs scheduled for tomorrow
+5. Customers awaiting response
+6. Unreachable customers
+7. Postponed jobs
+
+But allow me to manually change priority.
+
+I must be able to drag/reorder jobs when necessary.
+
+================================
+4. MAIN DASHBOARD
+================================
+
+Create a clean dashboard showing:
+
+TODAY'S JOBS
+CONFIRMED
+PENDING RESPONSE
+GOING
+ARRIVED
+IN PROGRESS
+COMPLETED
+ON HOLD
+POSTPONED
+CANCELLED
+UNREACHABLE
+
+Show counts for each.
+
+Also show:
+
+Today's total jobs
+Completed today
+Remaining today
+Jobs requiring follow-up
+Customers awaiting response
+
+The dashboard must be very easy to understand on a phone.
+
+================================
+5. JOB TABLE
+================================
+
+Create an Excel-like job table.
+
+The phone screen itself should remain fixed.
+
+The table can scroll horizontally when there are many columns.
+
+Do NOT make the entire application awkwardly horizontally scroll.
+
+The table should allow:
+
+- Search
+- Filter
+- Sort
+- Priority sorting
+- Status filtering
+- Date filtering
+- Area/LGA filtering
+- Customer search
+- Phone search
+- Rep/Agent filtering
+
+Suggested visible columns:
+
+#
+Customer
+Phone
+Location
+Date
+Priority
+Status
+Contact
+Action
+
+Additional information can be viewed by opening the job.
+
+================================
+6. INDIVIDUAL JOB PAGE
+================================
+
+When I open a job, show a professional job card.
+
+Example:
+
+CUSTOMER
+Kingsley Eduok
+
+PHONE
+07085560783
+
+EMAIL
+Kanueduok@gmail.com
+
+ADDRESS
+1 Williamson Street, Ikot Akpaden, Mkpat Enin
+
+STATUS
+CONFIRMED
+
+PRIORITY
+HIGH
+
+Then show:
+
+CONTACT
+ROUTE
+JOB
+RECORD
+NOTES
+
+Phase 1 does NOT need actual navigation yet.
+
+However, reserve a clearly visible:
+
+DIRECTIONS
+
+button/place for Phase 2.
+
+Do not implement the mapping functionality yet.
+
+================================
+7. CALL BUTTON
+================================
+
+Every customer must have:
+
+CALL CUSTOMER
+
+When clicked, open the Android/device phone dialer using the customer's phone number.
+
+Do not require copying the number manually.
+
+Record that the call was initiated.
+
+After returning to the application, allow recording:
+
+ANSWERED
+NO ANSWER
+UNREACHABLE
+CALL FAILED
+CUSTOMER REQUESTED CALLBACK
+
+Create contact history.
+
+Example:
+
+21 Aug — Call — Answered
+21 Aug — Call — No Answer
+22 Aug — SMS — Sent
+
+Do not falsely claim that the application can always determine whether a human answered a cellular call.
+
+================================
+8. SMS BUTTON
+================================
+
+Every customer must have:
+
+SMS CUSTOMER
+
+When clicked, open the phone's native SMS application with:
+
+TO:
+Customer phone number
+
+and optionally pre-filled message text.
+
+The user must still be able to review and press SEND.
+
+Create editable SMS templates.
+
+Template 1:
+
+"Good day, sir/ma. My name is Israel. I'm contacting you from WRKMAN. I am assigned to install your MTN ODU at your location. Please kindly let me know when you will be available for the installation. You can also reach me on WhatsApp: [MY WHATSAPP NUMBER]. Thank you."
+
+The user's own WhatsApp/phone number must be configurable from Settings.
+
+Other templates:
+
+CUSTOMER DID NOT ANSWER
+
+"Good day, sir/ma. I tried reaching you concerning your MTN ODU installation assigned to me from WRKMAN. Kindly let me know when you will be available. You can also reach me on WhatsApp: [MY WHATSAPP NUMBER]. Thank you."
+
+INSTALLATION CONFIRMATION
+
+"Good day, sir/ma. This is Israel from WRKMAN regarding your MTN ODU installation. Kindly confirm your availability for the scheduled installation."
+
+ON THE WAY
+
+"Good day, sir/ma. This is Israel from WRKMAN. I am currently on my way for your MTN ODU installation."
+
+FOLLOW-UP
+
+"Good day, sir/ma. I'm following up regarding your MTN ODU installation. Kindly let me know when you will be available."
+
+Allow templates to be edited from Settings.
+
+================================
+9. WHATSAPP BUTTON
+================================
+
+Create:
+
+WHATSAPP CUSTOMER
+
+Open WhatsApp using the customer's phone number.
+
+Do not add the user's own WhatsApp number unnecessarily to WhatsApp messages.
+
+Create separate WhatsApp templates.
+
+Allow the user to select:
+
+Initial Contact
+Follow-up
+On The Way
+Installation Confirmation
+
+The customer number must be passed automatically.
+
+No copying/pasting.
+
+================================
+10. CONTACT MANAGEMENT
+================================
+
+Create a Contact History section.
+
+Every contact event should record:
+
+Date
+Time
+Method
+Result
+Notes
+
+Methods:
+
+CALL
+SMS
+WHATSAPP
+IN PERSON
+
+Results:
+
+ANSWERED
+NO ANSWER
+UNREACHABLE
+RESPONDED
+CONFIRMED
+REQUESTED CALLBACK
+POSTPONED
+CANCELLED
+
+A customer who responds should be clearly distinguishable from one who has never responded.
+
+================================
+11. SCHEDULING
+================================
+
+Allow:
+
+SCHEDULE
+RESCHEDULE
+POSTPONE
+
+When postponing:
+
+Ask for:
+
+New Date
+Reason
+
+Examples:
+
+Customer unavailable
+Customer requested another date
+Customer did not respond
+Technician unavailable
+Distance/cost issue
+Other
+
+The original date must remain in the history.
+
+================================
+12. JOB WORKFLOW
+================================
+
+Create a simple workflow:
+
+NEW
+↓
+CONTACT CUSTOMER
+↓
+CONTACTED
+↓
+CONFIRMED
+↓
+SCHEDULED
+↓
+GOING
+↓
+ARRIVED
+↓
+IN PROGRESS
+↓
+COMPLETED
+
+Alternative paths:
+
+CONTACTED → UNREACHABLE
+CONTACTED → ON HOLD
+SCHEDULED → POSTPONED
+ANY ACTIVE JOB → CANCELLED
+
+Phase 1 does NOT need automatic GPS arrival detection.
+
+Keep ARRIVED as a manual status for now.
+
+================================
+13. COMPLETION RECORD
+================================
+
+When marking a job COMPLETED, ask for:
+
+Completion Date
+Completion Time
+Installation Notes
+Customer Confirmation
+Transport Cost
+Other Expenses
+
+Allow optional attachments/photos if supported.
+
+The completed record should become part of the permanent job history.
+
+================================
+14. EXPENSE TRACKING
+================================
+
+Each job must allow:
+
+Transport Cost
+Other Expense
+Expense Description
+Total Expense
+
+Example:
+
+Transport: ₦1,500
+Other: ₦300
+Total: ₦1,800
+
+Display expenses in reports.
+
+Use Nigerian Naira formatting.
+
+================================
+15. CSV IMPORT
+================================
+
+Allow CSV upload.
+
+The system should recognize columns such as:
+
+Customer Name
+Customer Phone
+Customer Email
+Customer Address
+Customer State
+Customer Area
+Customer Installation Date
+Agent Name
+Outlet Name
+Deal Code
+Shop Pick Name
+Shop Pick Up Location
+ODU Device Number
+ODU Device IMEI
+Device Type
+
+Do not require exact capitalization.
+
+Handle minor column-name variations.
+
+Example:
+
+"Customer Name"
+"customer name"
+"CUSTOMER NAME"
+
+should all map to the same field.
+
+================================
+16. EXCEL IMPORT
+================================
+
+Allow XLSX Excel file upload.
+
+Read the spreadsheet and map the columns into the job database.
+
+Provide an import preview before saving.
+
+Show:
+
+New records
+Duplicate records
+Invalid records
+
+Do not silently destroy existing jobs.
+
+================================
+17. RAW WRKMAN TEXT IMPORT
+================================
+
+Create a feature:
+
+PASTE WRKMAN JOB
+
+I should be able to paste raw text exactly like:
+
+Outlet name: MTN
+Agent name: Motunrayo
+Customer Name: John Doe
+Customer Phone no: 08000000000
+Customer Email: example@gmail.com
+Customer Address: 123 Example Street
+Customer State: Akwa Ibom
+Customer Area: Uyo
+Customer Installation Date: 19-08-2026
+Deal code:
+Shop Pick Name: MTN PORT HARCOURT SHOP
+Shop Pick Up Location:
+ODU Device Number: 08000000000
+ODU Device IMEI: 860480000000000
+Device Type: 5G
+
+Extract the fields automatically.
+
+If multiple jobs are pasted together, detect and separate each job.
+
+Show an import preview before saving.
+
+Never invent information.
+
+================================
+18. DUPLICATE DETECTION
+================================
+
+Detect likely duplicate jobs using:
+
+Customer phone
+Customer email
+ODU device number
+ODU IMEI
+
+Warn:
+
+"POSSIBLE DUPLICATE"
+
+Allow:
+
+Merge
+Keep Both
+Cancel
+
+Do not automatically delete records.
+
+================================
+19. REPORTS
+================================
+
+Create Reports.
+
+Reports should include:
+
+Completed Jobs
+Pending Jobs
+On Hold Jobs
+Postponed Jobs
+Cancelled Jobs
+Unreachable Jobs
+Jobs by Date
+Jobs by Agent/Rep
+Jobs by Area
+Jobs by Status
+Transport Expenses
+Total Expenses
+
+Allow date filtering.
+
+Allow export to:
+
+CSV
+Excel
+
+Also create a print-friendly report view that can be printed/saved as PDF from the browser/device.
+
+================================
+20. REP / SOURCE TRACKING
+================================
+
+Keep the Agent/Rep who supplied the job.
+
+Example:
+
+Motunrayo
+Motun
+Other representative
+
+Reports should be able to show:
+
+Jobs received from each rep
+Completed
+Pending
+Cancelled
+Postponed
+Unreachable
+
+This is important for future reference.
+
+================================
+21. SETTINGS
+================================
+
+Create Settings.
+
+Include:
+
+My Name
+My Phone Number
+My WhatsApp Number
+Default SMS template
+Default WhatsApp template
+Currency
+Default status
+Default priority
+
+Default user:
+
+Name:
+Israel
+
+Do not hard-code the user's phone number.
+Let the user enter it.
+
+================================
+22. DATA SAFETY
+================================
+
+Do not lose jobs when refreshing the application.
+
+Use a proper persistent data layer.
+
+If the existing application already has a database, preserve it.
+
+If not, implement a reliable local persistence layer suitable for Phase 1.
+
+Structure the data layer so it can later connect to a cloud database.
+
+Do not use temporary in-memory-only storage.
+
+================================
+23. MOBILE-FIRST DESIGN
+================================
+
+This application is primarily for Android phones.
+
+Requirements:
+
+Large buttons
+Large readable text
+Fast loading
+Simple navigation
+Minimal unnecessary animations
+Clear green/white/black visual language
+Yellow accent where useful
+Easy one-handed operation
+No clutter
+
+Primary navigation:
+
+Dashboard
+Jobs
+Today
+Contacts
+Reports
+Settings
+
+Use bottom navigation on mobile if appropriate.
+
+================================
+24. VISUAL STYLE
+================================
+
+Professional field-service application.
+
+Use:
+
+Green as primary
+White background
+Black/dark text
+Yellow accent
+
+Cards should have:
+
+Rounded corners
+Clear spacing
+Strong typography
+Clear status badges
+
+Do not make it look like a generic CRM.
+
+It should feel like a practical installation operations tool.
+
+================================
+25. FUTURE-READY ARCHITECTURE
+================================
+
+Prepare the application architecture for:
+
+PHASE 2:
+GPS
+Current location
+Directions
+Route sequencing
+Landmarks
+Map integration
+Satellite view
+Arrival detection
+Location sharing
+
+PHASE 3:
+Automation
+Advanced route optimization
+Advanced analytics
+Notifications
+Company/supervisor access
+Advanced expense analysis
+Intelligent follow-up
+Advanced reporting
+
+BUT DO NOT BUILD THESE NOW.
+
+Only make the architecture ready for them.
+
+================================
+26. QUALITY REQUIREMENTS
+================================
+
+Before considering Phase 1 complete:
+
+- Test CSV import
+- Test XLSX import
+- Test raw WRKMAN text parsing
+- Test duplicate detection
+- Test creating a job manually
+- Test editing a job
+- Test status changes
+- Test priority changes
+- Test postponement
+- Test contact history
+- Test Call button
+- Test SMS button
+- Test WhatsApp button
+- Test templates
+- Test reports
+- Test export
+- Test persistence after refresh
+- Test mobile layout
+
+Fix obvious errors before finishing.
+
+Do not add fake data to production.
+
+If sample data is needed for development/testing, clearly separate it from real user data.
+
+================================
+PHASE 1 SUCCESS CONDITION
+================================
+
+At the end of Phase 1, I should be able to:
+
+1. Paste raw WRKMAN jobs.
+2. Have the application separate and organize them.
+3. Import CSV/Excel jobs.
+4. See every job in an organized table.
+5. Open any customer.
+6. Call them directly.
+7. SMS them directly.
+8. WhatsApp them directly.
+9. Record whether they responded.
+10. Schedule/postpone them.
+11. Prioritize confirmed customers.
+12. Mark Going/Arrived/In Progress/Completed.
+13. Record transport expenses.
+14. Keep complete contact history.
+15. Search and filter jobs.
+16. Export professional reports.
+17. Refresh/reopen the application without losing data.
+
+BUILD THIS PHASE NOW.
+
+Do not proceed to Phase 2 until Phase 1 is stable and functional.
